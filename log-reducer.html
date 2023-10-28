@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://stuk.github.io/jszip/dist/jszip.min.js"></script>
+    <title>Log Reducer</title>
+</head>
+<body>
+
+    <!-- Conteúdo da Página -->
+    <div class="container mt-4">
+        <a href="/" class="">&lt; Voltar</a>
+    </div>
+
+
+    <div class="container mt-5">
+        <h2>Log Reducer</h2>
+        <pre>
+Permite pegar um arquivo .log gigante e cortar o arquivo selecionando apenas um determinado range de horários. 
+Também reduz o stacktrace removendo logs internos do wildfly
+        </pre>
+    
+        <form id="logForm">
+            <div class="mb-3">
+                <label for="logFile" class="form-label">
+                    Arquivo de Log (pode ser utilizado o .zip):
+                    <span class="badge badge-contracted"><span class="rounded-circle bg-danger"></span></span>
+                    <span class="badge badge-expanded rounded-pill bg-danger">obrigatório</span>
+                </label>
+                <input type="file" class="form-control" id="logFile" name="logFile">
+            </div>
+            <div class="mb-3">
+                <label for="startText" class="form-label">
+                    Começar ao encontrar o texto:
+                    <span class="badge badge-contracted"><span class="rounded-circle bg-secondary"></span></span>
+                    <span class="badge badge-expanded rounded-pill bg-secondary">opcional</span>
+                </label>
+                <input type="text" class="form-control" id="startText" name="startText" placeholder="ex.: 2023-10-25 09:33">
+            </div>
+    
+            <div class="mb-3">
+                <label for="endText" class="form-label">
+                    Terminar ao encontrar o texto:
+                    <span class="badge badge-contracted"><span class="rounded-circle bg-secondary"></span></span>
+                    <span class="badge badge-expanded rounded-pill bg-secondary">opcional</span>
+                </label>
+                <input type="text" class="form-control" id="endText" name="endText" placeholder="ex.: 2023-10-25 09:40">
+            </div>
+
+            <div class="mb-3">
+                <label for="textMustContains" class="form-label">
+                    Precisa conter o texto
+                    <span class="badge badge-contracted"><span class="rounded-circle bg-secondary"></span></span>
+                    <span class="badge badge-expanded rounded-pill bg-secondary">opcional</span>
+                </label>
+                <input type="text" class="form-control" id="textMustContains" name="textMustContains" placeholder="ex.: (default task-4189)">
+            </div>
+    
+            <button type="button" class="btn btn-primary" onclick="processLog()">Processar</button>
+        </form>
+        <p>
+            <br>
+        </p>
+        <p>
+        <div class="bd-example font-monospace">
+            <details open="">
+                <summary>Changelog</p></summary>
+                <pre>
+    2023-10-27
+    - Adicionado suporte para selecionar diretamente um arquivo zip
+    - Alterado nome do arquivo resultado, adicionando "-reduced" ao final e mantendo a extensão
+    - Adicionado filtro por texto (todas as linhas precisam ter esse texto)
+                </p>
+            </details>
+            </div>
+    </p>
+    </div>
+    
+    <script>
+        function processLog() {
+            debugger;
+            const logFileInput = document.getElementById('logFile');
+            const startText = document.getElementById('startText').value;
+            const endText = document.getElementById('endText').value;
+            const textMustContains = document.getElementById('textMustContains').value;
+
+            if (!logFileInput.files.length) {
+                alert('Informe o arquivo');
+                return;
+            }
+
+            const file = logFileInput.files[0];
+
+            if (file.name.endsWith('.zip')) {
+                // Se for um arquivo .zip, descompacta
+                const zip = new JSZip();
+
+                zip.loadAsync(file).then(function(contents) {
+                    // Assume que há apenas um arquivo dentro do zip
+                    const fileName = Object.keys(contents.files)[0];
+
+                    contents.files[fileName].async('string').then(function(logContent) {
+                        processLogContent(fileName, logContent, startText, endText, textMustContains);
+                    });
+                });
+            } else {
+                // Se não for um arquivo .zip, lê diretamente
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const logContent = e.target.result;
+                    return;
+                    processLogContent(file.name, logContent, startText, endText, textMustContains);
+                };
+
+                reader.readAsText(file);
+            }
+        }
+
+        function processLogContent(fileName, logContent, startText, endText, textMustContains) {
+            const logLines = logContent.split('\n');
+
+            let outputLines = [];
+            let capturing = false;
+
+            for (const line of logLines) {
+                if (startText.length == 0 || line.includes(startText)) {
+                    capturing = true;
+                }
+
+                if (capturing) {
+                    if (!(line.includes("at jdk.internal")
+                            || line.includes("at java.base/jdk.internal")
+                            || line.includes("at org.")
+                            || line.includes("at java.base/java.lang")
+                            || line.includes("at deployment.fluig-server.ear//com.sun.proxy")
+                            || line.includes("at java.base/java.util.concurrent")
+                            || line.includes("at javax.servlet")
+                            || line.includes("at io.")
+                            || line.includes("at com.fluig.response//")
+                            || line.includes("at com.fluig.permission//")
+                            || line.includes("at com.fluig.monitoring//")
+                            || line.includes("at com.fluig.response//")
+                            || line.includes("net.bull.javamelody.MonitoringFilter.doFilter")
+                            || line.includes("ECMVolPipeline.doFilter")
+                            || line.includes("RealTime is down!"))) {
+                                if (textMustContains.length == 0 || line.includes(textMustContains)) {
+                                    outputLines.push(line);
+                                }
+                                
+                    }
+                }
+
+                if (endText.length > 0 && line.includes(endText)) {
+                    capturing = false;
+                    break;
+                }
+            }
+
+            const output = outputLines.join('\n');
+            let index = fileName.lastIndexOf('.');
+            let name = index >= 0 ? fileName.substring(0,index) : name;
+            let extension = index > 0 ? fileName.substring(index) : "";
+            download(output, name + "-reduced" + extension, 'text/plain');
+        }
+
+        function download(content, fileName, contentType) {
+            const a = document.createElement('a');
+            const file = new Blob([content], { type: contentType });
+
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+
+            URL.revokeObjectURL(a.href);
+        }
+    </script>
+
+    <style>
+        .badge-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .badge-expanded {
+            display: none;
+        }
+
+        .rounded-circle {
+            display: inline-block;
+            width: 10px; 
+            height: 10px;
+        }
+
+        .form-label:hover .badge-expanded {
+            display: inline-block;
+        }
+
+        .form-label:hover .badge-contracted {
+            display: none;
+        }
+    </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KRF0YWKD8Z"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-KRF0YWKD8Z');
+</script>
+</body>
+</html>
