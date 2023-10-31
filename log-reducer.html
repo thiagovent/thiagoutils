@@ -69,6 +69,16 @@ Também reduz o stacktrace removendo logs internos do wildfly
             <details open="">
                 <summary>Changelog</p></summary>
                 <pre>
+    2023-10-31
+    - Adicionado string '.doFilter(' a ser ignorado e removido itens que seriam redundantes com essa nova entrada
+    - Corrigido problema que impedia geração do log em arquivo simples
+    - Corrigido problema ao informar um arquivo sem extensão
+            </details>
+            </div>
+
+            <details>
+                <summary>Mais</p></summary>
+                <pre>
     2023-10-27
     - Adicionado suporte para selecionar diretamente um arquivo zip
     - Alterado nome do arquivo resultado, adicionando "-reduced" ao final e mantendo a extensão
@@ -81,7 +91,6 @@ Também reduz o stacktrace removendo logs internos do wildfly
     
     <script>
         function processLog() {
-            debugger;
             const logFileInput = document.getElementById('logFile');
             const startText = document.getElementById('startText').value;
             const endText = document.getElementById('endText').value;
@@ -112,7 +121,6 @@ Também reduz o stacktrace removendo logs internos do wildfly
 
                 reader.onload = function(e) {
                     const logContent = e.target.result;
-                    return;
                     processLogContent(file.name, logContent, startText, endText, textMustContains);
                 };
 
@@ -144,9 +152,8 @@ Também reduz o stacktrace removendo logs internos do wildfly
                             || line.includes("at com.fluig.permission//")
                             || line.includes("at com.fluig.monitoring//")
                             || line.includes("at com.fluig.response//")
-                            || line.includes("net.bull.javamelody.MonitoringFilter.doFilter")
-                            || line.includes("ECMVolPipeline.doFilter")
-                            || line.includes("RealTime is down!"))) {
+                            || line.includes(".doFilter(")
+                            )) {
                                 if (textMustContains.length == 0 || line.includes(textMustContains)) {
                                     outputLines.push(line);
                                 }
@@ -162,7 +169,7 @@ Também reduz o stacktrace removendo logs internos do wildfly
 
             const output = outputLines.join('\n');
             let index = fileName.lastIndexOf('.');
-            let name = index >= 0 ? fileName.substring(0,index) : name;
+            let name = index >= 0 ? fileName.substring(0,index) : fileName;
             let extension = index > 0 ? fileName.substring(index) : "";
             download(output, name + "-reduced" + extension, 'text/plain');
         }
@@ -187,7 +194,9 @@ Também reduz o stacktrace removendo logs internos do wildfly
         }
 
         .badge-expanded {
-            display: none;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 1.5s ease;
         }
 
         .rounded-circle {
@@ -197,7 +206,8 @@ Também reduz o stacktrace removendo logs internos do wildfly
         }
 
         .form-label:hover .badge-expanded {
-            display: inline-block;
+            visibility: visible;
+            opacity: 1;
         }
 
         .form-label:hover .badge-contracted {
