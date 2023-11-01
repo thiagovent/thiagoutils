@@ -1,64 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Utilitários </title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Utilitários </title>
 
-  <!-- Adicione o link para o arquivo CSS do Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-</head>
+    <!-- Adicione o link para o arquivo CSS do Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Adicione o script do Bootstrap para os ícones SVG -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
 <body>
 
-<div class="container mt-5">
-  <h1 class="mb-4 text-center">Utilitários</h1>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <!-- Logo -->
+        <a class="navbar-brand" href="#">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-regex" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 1 1 .707.707Zm9.9-.707a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.314.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707ZM6 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm5-6.5a.5.5 0 0 0-1 0v2.117L8.257 5.57a.5.5 0 0 0-.514.858L9.528 7.5 7.743 8.571a.5.5 0 1 0 .514.858L10 8.383V10.5a.5.5 0 1 0 1 0V8.383l1.743 1.046a.5.5 0 0 0 .514-.858L11.472 7.5l1.785-1.071a.5.5 0 1 0-.514-.858L11 6.617V4.5Z"/>
+            </svg>
+        </a>
 
-  <div class="row">
-    <div class="col-md-4 mb-4">
-      <div class="text-center">
-        <a href="log-reducer.html"><i class="bi bi-file-earmark-text h1 text-primary"></i>
-            <h3 class="mt-2">Log Reducer</h3></a>
-            <p>Reduz stacktrace e pega apenas uma parte do log pelo horário</p>
-      </div>
+        <!-- Nome "Utilitários" -->
+        <span class="navbar-text">
+            <a class="dropdown-item" href="#">
+                Utilitários
+            </a>
+        </span>
+
+        <!-- Links e Dropdowns -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <!-- Dropdown "Log" -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownLog" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Log
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownLog">
+                        <li><a class="dropdown-item" href="#log-reducer">Log Reducer</a></li>
+                    </ul>
+                </li>
+
+                <!-- Dropdown "Processos" -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownProcessos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Processos
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownProcessos">
+                        <li><a class="dropdown-item" href="#replacer-engineAllocationConfiguration">Replacer Engine</a></li>
+                    </ul>
+                </li>
+
+                <!-- Link "Sobre" -->
+                <li class="nav-item">
+                    <a class="nav-link" href="#about">Sobre</a>
+                </li>
+            </ul>
+        </div>
     </div>
+</nav>
 
-    <!-- Item 2 -->
-    <div class="col-md-4 mb-4">
-      <div class="text-center">
-        <a href="replacer-engineAllocationConfiguration.html"><i class="bi bi-braces-asterisk h1 text-success"></i>
-        <h3 class="mt-2">Replacer Engine</h3></a>
-        <p>Remove o conteúdo das tags de engineAllocationConfiguration e engineAllocationId do arquivo .xml</p>
-      </div>
-    </div>
-
-    <!-- Item 3 >
-    <div class="col-md-4 mb-4">
-      <div class="text-center">
-        <svg class="bi" width="3em" height="3em" fill="currentColor">
-          <use xlink:href="#calendar"></use>
-        </svg>
-        <h3 class="mt-2">Calendário</h3>
-        <p>Descrição do calendário.</p>
-      </div>
-    </div-->
-
-    <!-- Adicione mais itens conforme necessário -->
-
-  </div>
+<!-- Content -->
+<div class="container mt-3" id="content">
+    <!-- O conteúdo dinâmico será exibido aqui -->
 </div>
 
-<!-- Adicione o script do Bootstrap para os ícones SVG -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-KRF0YWKD8Z"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-KRF0YWKD8Z');
+<div class="container mt-5" id="main" style="display: none;">
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="text-center">
+          <a href="#log-reducer"><i class="bi bi-file-earmark-text h1 text-primary"></i>
+              <h3 class="mt-2">Log Reducer</h3></a>
+              <p>Reduz stacktrace e pega apenas uma parte do log pelo horário</p>
+        </div>
+      </div>
+  
+      <!-- Item 2 -->
+      <div class="col-md-4 mb-4">
+        <div class="text-center">
+          <a href="#replacer-engineAllocationConfiguration"><i class="bi bi-braces-asterisk h1 text-success"></i>
+          <h3 class="mt-2">Replacer Engine</h3></a>
+          <p>Remove o conteúdo das tags de engineAllocationConfiguration e engineAllocationId do arquivo .xml</p>
+        </div>
+      </div>
+  
+      <!-- Item 3 >
+      <div class="col-md-4 mb-4">
+        <div class="text-center">
+          <svg class="bi" width="3em" height="3em" fill="currentColor">
+            <use xlink:href="#calendar"></use>
+          </svg>
+          <h3 class="mt-2">Calendário</h3>
+          <p>Descrição do calendário.</p>
+        </div>
+      </div-->
+  
+      <!-- Adicione mais itens conforme necessário -->
+  
+    </div>
+  </div>
+
+<!-- Scripts do Bootstrap (JavaScript) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Seu script para modificar o conteúdo -->
+<script>
+    function changeContent() {
+        var url = getFileUrl();
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("content").innerHTML = this.responseText;
+            } else {
+                document.getElementById("content").innerHTML = document.getElementById("main").innerHTML;
+            }
+        };
+        xhttp.open("GET", url, true);
+        xhttp.send();
+    }
+
+    getFileUrl = function() {
+      var hash = window.location.hash.substr(1);
+      if (hash.indexOf("raw-") == 0) {
+        return "https://raw.githubusercontent.com/thiagovent/thiagoutils/" + hash.substr("raw-".length);
+      } else {
+        return hash + ".html";
+      }
+    }
+
+    carregarConteudoDoHash = function() {
+        var hash = window.location.hash.substr(1);
+        if (hash !== "") {
+            changeContent();
+        } else {
+            document.getElementById("content").innerHTML = document.getElementById("main").innerHTML;
+        }
+    };
+
+    document.addEventListener("click", function(e) {
+        if (e.target.tagName === "A" && e.target.hash !== "") {
+            e.preventDefault();
+            var hash = e.target.hash.substr(1);
+            window.location.hash = hash;
+
+            changeContent();
+        }
+    });
+
+
+    // Carregar conteúdo na inicialização
+    window.onload = carregarConteudoDoHash;
+
+    // Atualizar conteúdo quando o hash da URL mudar
+    window.addEventListener("hashchange", carregarConteudoDoHash);
 </script>
+
 </body>
 </html>

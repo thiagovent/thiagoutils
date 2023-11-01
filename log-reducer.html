@@ -10,14 +10,8 @@
 </head>
 <body>
 
-    <!-- Conteúdo da Página -->
-    <div class="container mt-4">
-        <a href="/" class="">&lt; Voltar</a>
-    </div>
-
-
     <div class="container mt-5">
-        <h2>Log Reducer</h2>
+        <h2>Log Reducer<sup>1.0.2</sup></h2>
         <pre>
 Permite pegar um arquivo .log gigante e cortar o arquivo selecionando apenas um determinado range de horários. 
 Também reduz o stacktrace removendo logs internos do wildfly
@@ -69,7 +63,7 @@ Também reduz o stacktrace removendo logs internos do wildfly
             <details open="">
                 <summary>Changelog</p></summary>
                 <pre>
-    2023-10-31
+    2023-10-31 - 1.0.2<!--a href="#raw-96b433a636d9bc98a4116449a40e865e51d81fb1/log-reducer.html" target="_blank">1.0.2</a-->
     - Adicionado string '.doFilter(' a ser ignorado e removido itens que seriam redundantes com essa nova entrada
     - Corrigido problema que impedia geração do log em arquivo simples
     - Corrigido problema ao informar um arquivo sem extensão
@@ -79,7 +73,7 @@ Também reduz o stacktrace removendo logs internos do wildfly
             <details>
                 <summary>Mais</p></summary>
                 <pre>
-    2023-10-27
+    2023-10-27 - <a href="#raw-4a5ff3ca506603534747fe69ecf483a3266e4e84/log-reducer.html" target="_blank">1.0.1</a>
     - Adicionado suporte para selecionar diretamente um arquivo zip
     - Alterado nome do arquivo resultado, adicionando "-reduced" ao final e mantendo a extensão
     - Adicionado filtro por texto (todas as linhas precisam ter esse texto)
@@ -187,6 +181,12 @@ Também reduz o stacktrace removendo logs internos do wildfly
     </script>
 
     <style>
+        sup {
+            font-size: 0.3em;
+            top: -1.5em;
+            left: 1em;
+        }
+
         .badge-container {
             position: relative;
             display: inline-block;
@@ -214,14 +214,9 @@ Também reduz o stacktrace removendo logs internos do wildfly
             display: none;
         }
     </style>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-KRF0YWKD8Z"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-KRF0YWKD8Z');
-</script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KRF0YWKD8Z"></script><script>  window.dataLayer = window.dataLayer || [];  function gtag(){dataLayer.push(arguments);}  gtag('js', new Date());  gtag('config', 'G-KRF0YWKD8Z');</script>
+
 </body>
 </html>

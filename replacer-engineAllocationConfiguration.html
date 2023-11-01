@@ -9,20 +9,19 @@
     <title>Replacer Engine</title>
 </head>
 <body>
-    <!-- Conteúdo da Página -->
-    <div class="container mt-4">
-        <a href="/" class="">&lt; Voltar</a>
-    </div>
-
 
     <div class="container mt-5">
-        <h2>Replacer Engine</h2>
+        <h2>Replacer Engine<sup>1.0.0</sup></h2>
         <pre>
 Permite pegar um arquivo .xml e remove os mecanismos de atribuição para facilitar a exportação para o servidor
         </pre>
 
         <div class="mb-3">
-            <label for="fileInput" class="form-label">Selecione um arquivo:</label>
+            <label for="fileInput" class="form-label">
+                Arquivo xml do processo:
+                <span class="badge badge-contracted"><span class="rounded-circle bg-danger"></span></span>
+                <span class="badge badge-expanded rounded-pill bg-danger">obrigatório</span>
+            </label>
             <input type="file" class="form-control" id="fileInput">
         </div>
     
@@ -70,14 +69,44 @@ Permite pegar um arquivo .xml e remove os mecanismos de atribuição para facili
             }
         }
     </script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-KRF0YWKD8Z"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-KRF0YWKD8Z');
+
+    <style>
+        sup {
+            font-size: 0.3em;
+            top: -1.5em;
+            left: 1em;
+        }
+
+        .badge-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .badge-expanded {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        .rounded-circle {
+            display: inline-block;
+            width: 10px; 
+            height: 10px;
+        }
+
+        .form-label:hover .badge-expanded {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .form-label:hover .badge-contracted {
+            display: none;
+        }
+    </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KRF0YWKD8Z"></script><script>  window.dataLayer = window.dataLayer || [];  function gtag(){dataLayer.push(arguments);}  gtag('js', new Date());  gtag('config', 'G-KRF0YWKD8Z');
 </script>
 </body>
 </html>
