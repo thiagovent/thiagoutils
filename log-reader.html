@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Logs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body>
+    
+    <div class="container mt-5">
+        <h1>Visualizador de Logs<sup>0.9.1</sup></h1>
+        <small class="text-muted">
+            Lê um arquivo de log, agrupando stacktrace e quebras de linha de log, permitindo criar filtros complexos e com busca de conteúdo
+        </small>
+        <p></p>
+            
+        <div class="row">
+            <div class="col-md-10">
+                <label for="logFileInput" class="form-label">Escolher arquivo de log:</label>
+                <input type="file" class="form-control position-relative" id="logFileInput" onchange="file.load()">
+            </div>
+            <div class="col-md-1">
+                <label for="quantityInput" class="form-label">Exibir:</label>
+                <select class="form-select" id="quantityInput" onchange="filter.apply()">
+                    <option value="10">10</option>
+                    <option value="100" selected>10&#x00B2;</option>
+                    <option value="1000">10&#x00B3;</option>
+                    <option value="10000">10&#x2074;</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label for="logFileLines" class="form-label">Total:</label>
+                <input type="number" class="form-control position-relative" id="logFileLines" disabled>
+            </div>
+        </div>
+        <div id="filters" class="mb-3 row sticky-top" style="z-index: 1000; background-color: white;">
+            
+            <div class="col-md-10">
+                <label for="filterInput" class="form-label">Filtrar:</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="filterInput" placeholder="thread=EJB TIMER - 12,thread=EJB TIMER - 11,hour=09:00:00,text=lalala,class=Classe,!class=OutraClasse" onchange="filter.updateDiv()">
+                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#helpFilterModal">
+                        <i class="bi bi-question-circle"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <label for="visualizarBtn" class="form-label">&nbsp;</label>
+                <button type="button" id="visualizarBtn" class="btn btn-secondary mb-3" onclick="filter.apply()" disabled style="display: block;">Filtrar</button>
+            </div>
+            <div class="col-md-1">
+                <label for="logFilteredLines" class="form-label">Linhas:</label>
+                <input type="number" class="form-control position-relative btn" id="logFilteredLines" disabled>
+            </div>
+            
+            
+            <div class="row mt-3">
+                <div class="col-md-9">
+                    <div class="input-group">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Digite sua busca" id="searchField" onkeyup="search.apply()">
+                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#helpSearchModal">
+                                <i class="bi bi-question-circle"></i>
+                            </button>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination" id="searchNavigation">
+                                    <li class="page-item">
+                                        <button class="page-link btn btn-outline-primary" id="searchPrevious" aria-label="Previous" onclick="search.navigation.previous()" disabled>
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </button>
+                                    </li>
+                                    <li class="page-item"><input id="searchIndex" type="number" class="form-control" onchange="search.navigation.go()" disabled></li>
+                                    <li class="page-item disabled"><button class="page-link btn btn-outline-primary" aria-disabled="true" disabled>/</button></li>
+                                    <li class="page-item"><button class="page-link btn btn-outline-primary" id="searchMaxIndex" onclick="search.navigation.last()" disabled>-</button></li>
+                                    <li class="page-item">
+                                        <button class="page-link btn btn-outline-primary" id="searchNext" aria-label="Next" onclick="search.navigation.next()" disabled>
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                
+                
+            </div>
+            
+        </div>
+        
+        <div id="logContainer"></div>
+        
+        
+        <div class="text-center" id="loadMore" style="display: none;">
+            <!-- Example split danger button -->
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" onclick="render.loadMore()" >Carregar Mais</button>
+                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" onclick="render.loadMore(10)">Carregar mais 10</a></li>
+                    <li><a class="dropdown-item" onclick="render.loadMore(10 ** 2)">Carregar mais 10&#x00B2;</a></li>
+                    <li><a class="dropdown-item" onclick="render.loadMore(10 ** 3)">Carregar mais 10&#x00B3;</a></li>
+                    <li><a class="dropdown-item" onclick="render.loadMore(10 ** 4)">Carregar mais 10&#x2074;</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="eof" class="text-center text-secondary eof" style="display: none;">
+            <p>
+                -&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;&nbsp;[&nbsp;&nbsp;fim do arquivo&nbsp;&nbsp;]&nbsp;&nbsp-&nbsp;-&nbsp;-&nbsp;-&nbsp;-&nbsp;-
+            </p>
+        </div>
+        
+        
+        <!-- Modal de Ajuda -->
+        <div class="modal fade" id="helpFilterModal" tabindex="-1" aria-labelledby="helpFilterModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="helpFilterModalLabel">Ajuda - Filtrar por Texto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            Use o campo "Filtrar por texto" para aplicar filtros aos logs. Cada filtro é do tipo "chave=valor" e são separados por 'vírgula'.
+                        </p>
+                        <p>
+                            Exemplos de filtros:
+                        </p>
+                        <ul>
+                            <li><code>thread=EJB TIMER - 12</code></li>
+                            <li><code>hour=09</code> (todo o log das 9h)</li>
+                            <li><code>hour=09:50</code></li>
+                            <li><code>hour&gt;10</code> (a partir das 10h)</li>
+                            <li><code>hour&lt;12</code> (até as 12h)</li>
+                            <li><code>hour&gt;10,hour&lt;12</code> (das 10h até as 12h)</li>
+                            <li><code>text=nro</code> (texto que contenha 'nro')</li>
+                            <li><code>class=Classe</code></li>
+                            <li><code>!class=OutraClasse</code> (exclui logs da classe "OutraClasse")</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal de Ajuda -->
+        <div class="modal fade" id="helpSearchModal" tabindex="-1" aria-labelledby="helpSearchModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="helpSearchModalLabel">Ajuda - Busca por Texto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            Use o campo de busca para navegar entre as ocorrências da busca. Note que a busca funciona mesmo nas linhas "colapsadas" (apesar de não fazer a marcação nelas) mas não nas não filtradas
+                        </p>
+                        <p>
+                            A busca acontece por todas as palavras na ordem que foram digitadas mas não necessariamente consecutivas. Exemplo: ao pesquisar por <code>movimentação da solicitação iniciada</code>, são entradas válidas:
+                        </p>
+                        <ul>
+                            <li><code>movimentação da solicitação iniciada</code></li>
+                            <li><code>movimentação da solicitação 9191 iniciada</code></li>
+                        </ul>
+                        <p>Não são entradas válidas:</p>
+                        <ul>
+                            <li><code>iniciada movimentação da solicitação </code></li>
+                            <li><code>movimentação da solicitação</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <script>
+            const log = {
+                all: [],
+                filtered: [],
+                search: []
+            };
+            
+            const file = {
+                load: () => {
+
+                    const input = document.getElementById('logFileInput');
+
+                    const visualizarBtn = document.getElementById('visualizarBtn');
+                    
+                    if (!input.files || input.files.length === 0) {
+                        alert('Por favor, escolha um arquivo de log.');
+                        return;
+                    }
+                    
+                    const fileReader = new FileReader();
+                    
+                    fileReader.onload = function () {
+                        const logText = fileReader.result;
+                        logs = reader.load(logText);
+                        visualizarBtn.removeAttribute('disabled');
+                        
+                        filter.apply();
+                    };
+                    
+                    fileReader.readAsText(input.files[0]);
+                }
+            };
+            
+            const reader = {
+                matchers: [
+                {
+                    pattern: /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (\w+)[ ]{1,2}\[([\w.-]+)\] \(([\w\s-]+)\)\s+(.+)$/,
+                    createEntry: (match) => {
+                        const [, date, type, clazz, thread, text] = match;
+                        
+                        return {
+                            date,
+                            type,
+                            class: clazz,
+                            thread,
+                            text,
+                            associatedLines: [],
+                        };
+                    }
+                },{
+                    pattern: /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (\w+)[ ]{1,2}\[([\w.-]+)\] \(([\w\s-]+)\(([\w\s-]+)\)\)\s+(.+)$/,
+                    createEntry: (match) => {
+                        const [, date, type, clazz, thread, otherThread, text] = match;
+                        
+                        const logEntry = {
+                            date,
+                            type,
+                            class: clazz,
+                            thread,
+                            text,
+                            associatedLines: [],
+                        };
+                        logEntry.thread = logEntry.thread + "(" + otherThread + ")";
+                        
+                        return logEntry;
+                    }
+                }
+                ],
+                load: (content) => {
+                    log.all = [];
+                    log.filtered = [];
+                    log.search = [];
+                    
+                    const lines = content.split('\n');
+                    console.log(`${lines.length} lines in file`);
+                    
+                    let currentEntry = null;
+                    let lineNumber = 1;
+                    
+                    lines.forEach(line => {
+                        line = line.trim();
+                        let matches = false;
+                        for (let matcher of reader.matchers) {
+                            const match = line.match(matcher.pattern);
+                            if (match) {
+                                const entry = matcher.createEntry(match);
+                                entry.hour = entry.date.substring(entry.date.indexOf(" ")+1);
+                                entry.line = lineNumber++;
+                                
+                                log.all.push(entry);
+                                
+                                currentEntry = entry;
+                                return;
+                            }
+                        }
+                        
+                        if (currentEntry) {
+                            currentEntry.associatedLines.push(line);
+                        } else {
+                            console.warn(`não foi possível associar a seguinte linha a nenhum log e ela será ignorada: ${line}`);
+                        }
+                    });
+                    
+                    document.getElementById("logFileLines").value = log.all.length;
+                }
+            };
+            
+            const search = {
+                inputValue: () => document.getElementById("searchField").value.trim().toLowerCase(),
+                entries: () => {
+                    return search.inputValue().split(" ");
+                },
+                contains: (log) => {
+                    // concat text
+                    let text = log.text.toLowerCase();
+                    if (log.associatedLines.length > 0) {
+                        text += '\n';
+                        log.associatedLines.forEach(associatedLine => {
+                            text += associatedLine.toLowerCase() + '\n';
+                        });
+                    }
+                    
+                    let index = 0;
+                    for (let entry of search.entries()) {
+                        index = text.indexOf(entry, index);
+                        if (index < 0) {
+                            break;
+                        }
+                        index += entry.length;
+                    }
+                    
+                    return index >= 0;
+                },
+                formatElement: (element) => {
+                    let value = element.innerText
+                    element.innerHTML = "";
+                    
+                    let valueLowerCase = value.toLowerCase();
+                    
+                    let index = 0;
+                    let lastIndex = 0;
+                    
+                    for (let entry of search.entries()) {
+                        index = valueLowerCase.indexOf(entry, index);
+                        if (index < 0) {
+                            break;
+                        }
+                        
+                        const text = document.createElement("span");
+                        text.innerText = value.substring(index, lastIndex);
+                        element.appendChild(text);
+                        
+                        const mark = document.createElement("span");
+                        mark.className = "search-occurrence";
+                        mark.innerText = value.substring(index, index+entry.length);
+                        element.appendChild(mark);
+                        
+                        index += entry.length;
+                        lastIndex = index;
+                    }
+                    
+                    const text = document.createElement("span");
+                    text.innerText = value.substring(lastIndex);
+                    element.appendChild(text);
+                },
+                updateDiv: () => {
+                    const searchInput = document.getElementById("searchField");
+                    searchInput.classList.remove("border");
+                    searchInput.classList.remove("border-danger");
+                    
+                    if (log.search.length == 0) {
+                        document.getElementById("searchNavigation").querySelectorAll("button").forEach(button => button.setAttribute("disabled",""));
+                        document.getElementById("searchIndex").setAttribute("disabled","");
+                        document.getElementById("searchMaxIndex").innerText="-";
+                        document.getElementById("searchIndex").value="";
+                        
+                        if (search.inputValue().length > 0) {
+                            searchInput.classList.add("border");
+                            searchInput.classList.add("border-danger");
+                        }
+                    } else {
+                        document.getElementById("searchMaxIndex").innerText=log.search.length;
+                        document.getElementById("searchIndex").value=1;
+                        
+                        search.navigation.go();
+                        
+                        document.getElementById("searchNavigation").querySelectorAll("button").forEach(button => button.removeAttribute("disabled"));
+                        document.getElementById("searchIndex").removeAttribute("disabled");    
+                    }
+                },
+                navigation: {
+                    getCurrent: () => parseInt(document.getElementById("searchIndex").value),
+                    setCurrent: (newCurrent) => {
+                        document.getElementById("searchIndex").value = newCurrent;
+                        search.navigation.go();
+                    },
+                    next: () => {
+                        if (search.navigation.getCurrent() >= log.search.length) {
+                            search.navigation.setCurrent(1);
+                        } else {
+                            search.navigation.setCurrent(search.navigation.getCurrent()+1);
+                        }
+                    },
+                    previous: () => {
+                        let current = search.navigation.getCurrent();
+                        if (current <= 1) {
+                            search.navigation.last();
+                        } else {
+                            // current already has -1
+                            search.navigation.setCurrent(current-1);
+                        }
+                        
+                    },
+                    last: () => {
+                        search.navigation.setCurrent(log.search.length);
+                    },
+                    go: () => {
+                        const current = search.navigation.getCurrent()-1;
+                        
+                        const element = document.getElementById("logline-" + log.search[current]);
+                        if (element == null) {
+                            // not loaded
+                            render.load(log.filtered, render.last, log.search[current]);
+                        }
+                        scrollTo("logline-" + log.search[current]);
+                    }
+                },
+                apply: () => {
+                    const searchValue = search.inputValue();
+                    if (log.search) {
+                        // remove old markups
+                        log.search.forEach(line => {
+                            const element = document.getElementById("text-" + line);
+                            if (element) {
+                                // this is not stupid, I swear
+                                element.innerText = element.innerText;
+                            }
+                        })
+                    }
+                    
+                    log.search = [];
+                    
+                    if (searchValue) {
+                        log.filtered.forEach(logEntry => {
+                            if (search.contains(logEntry)) {
+                                log.search.push(logEntry.line);
+                                
+                                const element = document.getElementById("text-" + logEntry.line);
+                                if (!element) {
+                                    //not loaded
+                                    return;
+                                }
+                                
+                                search.formatElement(element);
+                            }
+                            
+                        });
+                        
+                    }
+                    
+                    search.updateDiv();
+                }
+            };
+
+            const filter = {
+                inputValue: () => document.getElementById("filterInput").value.trim().toLowerCase(),
+                current: "",
+                updateDiv: () => {
+                    const value = filter.inputValue();
+                    if (value == filter.current) {
+                        document.getElementById("logFilteredLines").classList.remove("btn-outline-danger");
+                        document.getElementById("visualizarBtn").classList.remove("btn-primary");
+                        document.getElementById("visualizarBtn").classList.add("btn-secondary");
+                    } else {
+                        document.getElementById("logFilteredLines").classList.add("btn-outline-danger");
+                        document.getElementById("visualizarBtn").classList.remove("btn-secondary");
+                        document.getElementById("visualizarBtn").classList.add("btn-primary");
+                    }
+                    document.getElementById("logFilteredLines").value = log.filtered.length;
+                },
+                parse: (filterText) => {
+                    const filters = filterText.split(',');
+                    
+                    return filters.map(filter => {
+                        let from=false;
+                        let to=false;
+                        let parts = filter.trim().split('=');
+                        if (parts.length == 1) {
+                            parts = filter.trim().split('>');
+                            if (parts.length == 1) {
+                                parts = filter.trim().split('<');
+                                if (parts.length != 1) {
+                                    to = true;
+                                }
+                            } else {
+                                from = true;
+                            }
+                        }
+                        const key = parts[0];
+                        const value = parts[1];
+                        const negate = key.startsWith('!');
+                        
+                        return { key: negate ? key.slice(1) : key, value, negate, from, to };
+                    });
+                },
+                matches: (logLine, entry) => {
+                    const logValue = logLine[entry.key];
+                
+                    if (!logValue) {
+                        return true;
+                    }
+                    
+                    let match = false;
+                    
+                    if (entry.key === 'hour') {
+                        if (entry.from) {
+                            match = logValue >= entry.value;
+                        } else if (entry.to){ 
+                            match = logValue <= entry.value;
+                        } else {
+                            match = logValue.startsWith(entry.value);
+                        }
+                    } else if (entry.key === 'text') {
+                        match = logValue.toLowerCase().includes(entry.value.toLowerCase());
+                    } else {
+                        match = logValue.toLowerCase() === entry.value.toLowerCase();
+                    }
+                    
+                    if (entry.negate) {
+                        return !match;
+                    } else {
+                        return match;
+                    }
+                },
+                apply: () => {
+                    const logContainer = document.getElementById('logContainer');
+                    logContainer.innerHTML = '';
+                    
+                    const filterText = filter.inputValue();
+                    
+                    const filters = filter.parse(filterText);
+                    
+                    log.filtered = log.all.filter(log => {
+                        return filters.every(entry => filter.matches(log, entry));
+                    });
+                    
+                    filter.current = filterText;
+                    filter.updateDiv();
+                    
+                    render.last = 0;
+                    
+                    render.load(log.filtered, render.last, parseInt(document.getElementById("quantityInput").value));
+                    
+                    scrollTo("logline-" + log.filtered[0].line);
+                    
+                    search.apply();
+                }
+            };
+            
+            
+            const render = {
+                last: 0,
+                linesByLoad: () => parseInt(document.getElementById("quantityInput").value),
+                loadMore: (amount) => {
+                    amount = (amount || render.linesByLoad());
+                    render.load(log.filtered, render.last+1, render.last + amount);
+                },
+                hideLoadMoreButton: () => {
+                    document.getElementById("loadMore").style.display = 'none';
+                    document.getElementById("eof").style.display = 'block';
+                },
+                showLoadMoreButton: () => {
+                    document.getElementById("loadMore").style.display = 'block';
+                    document.getElementById("eof").style.display = 'none';
+                },
+                getBadgeClass(logType) {
+                    switch (logType) {
+                        case 'ERROR':
+                        return 'text-bg-danger';
+                        case 'WARN':
+                        return 'text-bg-warning';
+                        case 'INFO':
+                        default:
+                        return 'text-primary';
+                    }
+                },
+                load: (logs, from, to) => {
+                    const renderDiv = document.getElementById('logContainer');                    
+                    for (;from <= to; from++) {
+                        let log = logs[from];
+                        
+                        if (!log) {
+                            render.hideLoadMoreButton();
+                            break;
+                        } else if (from == to) {
+                            render.showLoadMoreButton();
+                            break;
+                        }
+                        
+                        render.last++;
+                        
+                        const logDiv = document.createElement("div");
+                        logDiv.id = "logline-" + log.line;
+                        logDiv.className = 'd-flex align-items-start';
+                        
+                        const optionsDiv = document.createElement("div");
+                        optionsDiv.className = 'dropdown d-inline me-3';
+                        
+                        const logContentDiv = document.createElement("div");
+                        logContentDiv.className = 'flex-grow-1 div-line';
+                        
+                        
+                        const dropdown = createOptionsDropdown(log);
+                        
+                        const hour = document.createElement("span");
+                        hour.className = 'lineHeader font-monospace badge text-secondary ';
+                        hour.setAttribute("data-log-hour", log.hour);
+                        hour.append(`${log.hour} `);
+                        
+                        const badge = document.createElement("span");
+                        badge.className = `badge ${render.getBadgeClass(log.type)} font-monospace`;
+                        badge.setAttribute("data-log-type", log.type);
+                        badge.append(log.type);
+                        
+                        const classAndThread = document.createElement("span");
+                        classAndThread.className = 'lineHeader badge text-secondary';
+                        classAndThread.setAttribute("data-log-thread", log.thread);
+                        classAndThread.setAttribute("data-log-class", log.class);
+                        classAndThread.append(`[${getClassPart(log.class)}]`)
+                        
+                        const classAndThread1 = document.createElement("span");
+                        classAndThread1.className = 'lineHeader badge text-secondary';
+                        classAndThread1.setAttribute("data-log-thread", log.thread);
+                        classAndThread1.setAttribute("data-log-class", log.class);
+                        classAndThread1.append(`(${log.thread})`)
+                        
+                        const text = document.createElement("span");
+                        text.id = "text-" + log.line;
+                        text.className = 'line';
+                        classAndThread1.setAttribute("data-log-text", log.text);
+                        text.append(log.text);
+                        
+                        
+                        optionsDiv.appendChild(dropdown);
+                        
+                        if (log.associatedLines.length > 0) {
+                            
+                            const details = document.createElement("details");
+                            const summary = document.createElement("summary");
+                            summary.appendChild(hour);
+                            summary.appendChild(badge);
+                            summary.appendChild(classAndThread);
+                            summary.appendChild(classAndThread1);
+                            summary.appendChild(text);
+                            details.appendChild(summary);
+                            logContentDiv.appendChild(details);
+                            
+                            const logMessage = document.createElement('pre');
+                            
+                            
+                            log.associatedLines.forEach(associatedLine => {
+                                logMessage.append(associatedLine + '\n');
+                            });
+                            
+                            details.appendChild(logMessage);
+                        } else {
+                            logContentDiv.appendChild(hour);
+                            logContentDiv.appendChild(badge);
+                            logContentDiv.appendChild(classAndThread);
+                            logContentDiv.appendChild(classAndThread1);
+                            logContentDiv.appendChild(text);
+                        }
+                        
+                        
+                        logDiv.appendChild(optionsDiv);
+                        logDiv.appendChild(logContentDiv);
+                        
+                        renderDiv.appendChild(logDiv);
+                        
+                        if (search.contains(log)) {
+                            const element = document.getElementById("text-" + log.line);
+                            search.formatElement(element);
+                        }
+                        
+                    }
+                }
+            
+                
+            };
+            
+            function scrollTo(id) {
+                const stickDivHeight = document.getElementById("filters").getBoundingClientRect().height;
+                const position = document.getElementById(id).getBoundingClientRect();
+                window.scrollBy(0, position.y - stickDivHeight -5); 
+            }
+            
+            function createDropdownFilterItem(text, type, negative) {
+                
+                function closeDropdown() {
+                    dropdownMenu.classList.remove('show');
+                }
+                const optionButton = document.createElement("button");
+                optionButton.className = 'btn btn-sm';
+                optionButton.setAttribute("data-filter-type", type)
+                if (negative) {
+                    optionButton.setAttribute("data-filter-negate", "");
+                }
+                
+                optionButton.innerText = text;
+                optionButton.onclick = function () {
+                    addFilter(this);
+                    this.parentElement.classList.remove('show');
+                };
+                
+                return optionButton;
+            }
+            
+            function createOptionsDropdown(log) {
+                const dropdown = document.createElement("div");
+                dropdown.className = 'dropdown d-inline';
+                
+                const dropdownToggle = document.createElement("button");
+                dropdownToggle.className = 'btn btn-sm btn-light';
+                dropdownToggle.type = 'button';
+                dropdownToggle.innerHTML = '<i class="bi bi-list"></i>';
+                
+                dropdown.appendChild(dropdownToggle);
+                
+                const dropdownMenu = document.createElement("div");
+                dropdownMenu.className = 'dropdown-menu';
+                dropdownMenu.setAttribute('aria-labelledby', 'optionsDropdown');
+                
+                
+                dropdownMenu.appendChild(createDropdownFilterItem('+ Da mesma classe', 'class' ));
+                dropdownMenu.appendChild(createDropdownFilterItem('+ Da mesma hora', 'hour' ));
+                dropdownMenu.appendChild(createDropdownFilterItem('+ Do mesmo período', 'rangeHour' ));
+                dropdownMenu.appendChild(createDropdownFilterItem('+ Da mesma thread', 'thread' ));
+                dropdownMenu.appendChild(createDropdownFilterItem('+ Com o mesmo texto', 'text' ));
+                
+                const optionButton = document.createElement("li");
+                const separator = document.createElement("hr");
+                separator.className = 'dropdown-divider';
+                optionButton.appendChild(separator);
+                dropdownMenu.appendChild(optionButton);
+                
+                dropdownMenu.appendChild(createDropdownFilterItem('- Da mesma classe', 'class', true));
+                dropdownMenu.appendChild(createDropdownFilterItem('- Da mesma hora', 'hour', true));
+                dropdownMenu.appendChild(createDropdownFilterItem('- Do mesmo período', 'rangeHour', true));
+                dropdownMenu.appendChild(createDropdownFilterItem('- Da mesma thread', 'thread', true));
+                dropdownMenu.appendChild(createDropdownFilterItem('- Com o mesmo texto', 'text', true));
+                
+                dropdown.appendChild(dropdownMenu);
+                
+                dropdownToggle.addEventListener('click', function () {
+                    dropdownMenu.classList.toggle('show'); // Adicionando ou removendo a classe 'show'
+                });
+                
+                document.body.addEventListener('click', function (event) {
+                    if (!dropdown.contains(event.target)) {
+                        dropdownMenu.classList.remove('show');
+                    }
+                });
+                
+                return dropdown;
+                
+            }
+            
+            function addFilter(button) {
+                const line = button.parentElement.parentElement.parentElement.parentElement;
+                
+                const filterType = button.getAttribute("data-filter-type");
+                const filterSignal = (button.hasAttribute("data-filter-negate") ? "!" : "");
+                const attrName = 'data-log-' + (filterType == "rangeHour" ? "hour" : filterType);
+                
+                let attrValue = line.querySelectorAll(`[${attrName}]`)[0].getAttribute(attrName);
+                
+                if (attrValue.indexOf("=") > 0) {
+                    console.warn("o valor possui um '=' e será truncada por questões de compatibilidade")
+                    attrValue = attrValue.substring(0, attrValue.indexOf("="));
+                }
+                
+                const filterInput = document.getElementById('filterInput');
+                
+                if (filterType == "rangeHour") {
+                    newSearch = `hour>${subtractMinutes(attrValue,10)},hour<${addMinutes(attrValue,10)}`;
+                } else if (filterType == "hour") {
+                    attrValue = attrValue.substring(0, 2);
+                    newSearch = `hour=${attrValue}`;
+                } else {
+                    newSearch = `${filterType}=${attrValue}`
+                }
+                if (filterInput.value.length > 0) {
+                    filterInput.value += ',';
+                }
+                filterInput.value += filterSignal + newSearch;
+                
+                updateFilterButton();               
+                
+            }
+            
+            
+            
+            function getClassPart(fullclass) {
+                const lastIndex = fullclass.lastIndexOf('.');
+                return lastIndex !== -1 ? fullclass.substring(lastIndex + 1) : fullclass;
+            }
+            
+            function subtractMinutes(time, minutes) {
+                const [hours, minutesStr, seconds] = time.split(':');
+                const currentMinutes = parseInt(minutesStr);
+                const newMinutes = Math.max(0, Math.min(59, currentMinutes - minutes));
+                
+                const formattedHours = hours.padStart(2, '0');
+                const formattedMinutes = newMinutes.toString().padStart(2, '0');
+                
+                return `${formattedHours}:${formattedMinutes}`;
+            }
+            
+            function addMinutes(time, minutes) {
+                const [hours, minutesStr, seconds] = time.split(':');
+                const currentMinutes = parseInt(minutesStr);
+                const newMinutes = Math.max(0, Math.min(59, currentMinutes + minutes));
+                
+                const formattedHours = hours.padStart(2, '0');
+                const formattedMinutes = newMinutes.toString().padStart(2, '0');
+                
+                return `${formattedHours}:${formattedMinutes}`;
+            }
+            
+
+            
+            document.getElementById("filterInput").addEventListener("change", filter.updateDiv);
+            document.getElementById("filterInput").addEventListener("keyup", filter.updateDiv);
+            
+            
+            
+            
+        </script>
+        
+        <style>
+            sup {
+                font-size: 0.3em;
+                top: -1.5em;
+                left: 1em;
+            }
+            
+            .lineHeader {
+                font-size: 0.7em;
+                --bs-badge-padding-x: 0.3em;
+            }
+            
+            .line {
+                font-size: 0.9em;
+            }
+            
+            .div-line {
+                border-bottom-width: 1px;
+                border-bottom-style: solid;
+                border-bottom-color: #ebebeb;
+            }
+            
+            .search-occurrence {
+                font-weight:bold;
+                background-color: yellow;
+            }
+            
+            .eof {
+                font-size: 0.7em; 
+                margin-top: 10px;
+            }
+        </style>
+        
+    </body>
+    </html>
+    
