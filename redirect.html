@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecionamento</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.7em;
+        }
+    </style>
+</head>
+<body>
+
+<div id="message"></div>
+
+<script>
+    var loadingChars = ['\\', '|', '/', '-'];
+    var index = 0;
+
+    function showLoading() {
+        var messageDiv = document.getElementById("message");
+        messageDiv.innerHTML = "Redirecionando para <a href='https://thiago.venturelli.tec.br/utils/"+ window.location.hash + "'>https://thiago.venturelli.tec.br/utils</a>" + loadingChars[index];
+        index = (index + 1) % loadingChars.length;
+    }
+
+    showLoading();
+
+    var loadingInterval = setInterval(showLoading, 100);
+
+    function redirect() {
+        window.location.href = "https://thiago.venturelli.tec.br/utils/" + window.location.hash;
+    }
+
+    setTimeout(redirect, 3000);
+</script>
+
+</body>
+</html>

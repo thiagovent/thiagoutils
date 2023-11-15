@@ -7,4 +7,4 @@ This is a project from a backend developer making simple and easy to use tools f
 I know that is not the best way to do things, so, relax.. 
 
 # Running
-To use, just access https://bit.ly/thiagoutils
+To use, just access https://thiago.venturelli.tec.br/utils
