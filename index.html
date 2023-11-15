@@ -25,7 +25,7 @@
             
             <!-- Nome "Utilitários" -->
             <span class="navbar-text">
-                <a class="dropdown-item" href="/">
+                <a class="dropdown-item" href="?">
                     Utilitários
                 </a>
             </span>
@@ -186,7 +186,7 @@
                 console.warn("load via # está depreciado");
                 
                 var hash = window.location.hash.substr(1);
-                window.location = window.location.origin + "/?" + hash;
+                window.location = window.location.href.substr(0, window.location.href.indexOf('#')) + "?" + hash;
             }
 
             var page = window.location.search.substring(1);
